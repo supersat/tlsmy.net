@@ -6,7 +6,8 @@ import asyncio
 import base36
 import base64
 import json
-import jwcrypto
+import jwcrypto.jwk
+import jwcrypto.jws
 
 class WebServer:
     def __init__(self):
@@ -24,22 +25,24 @@ class WebServer:
         if request.content_type != 'application/jose+json':
             return web.HTTPBadRequest()
 
-        req_body = await request.json()
-        try:
+        req_body = await request.text()
+        req_obj = json.loads(req_body)
+        #try:
+        if True:
             # TODO(supersat): Is there a less brain-dead way of doing this?
             jws = jwcrypto.jws.JWS()
             jws.deserialize(req_body)
-            protected = json.loads(str(base64.urlsafe_b64decode(req_body['protected'] + '=='), 'utf-8'))
-            chal = json.loads(str(base64.urlsafe_b64decode(req_body['protected'] + '=='), 'utf-8'))
+            protected = json.loads(str(base64.urlsafe_b64decode(req_obj['protected'] + '=='), 'utf-8'))
+            chal = json.loads(str(base64.urlsafe_b64decode(req_obj['payload'] + '=='), 'utf-8'))
             pub_key = jwcrypto.jwk.JWK.from_json(json.dumps(protected['jwk']))
             jws.verify(pub_key)
             thumbprint_bytes = base64.urlsafe_b64decode(pub_key.thumbprint() + '==')
             thumbprint = base36.dumps(int.from_bytes(thumbprint_bytes, byteorder='big'))
             if chal['type'] == 'dns-01':
-                self._redis_pool.set('acme-dns-01-chal:{}'.format(thumbprint), chal['token'], expire=300)
+                await self._redis_pool.set('acme-dns-01-chal:{}'.format(thumbprint), chal['token'], expire=300)
                 return web.HTTPNoContent()
-        except:
-            pass
+        #except:
+        #    pass
         return web.HTTPBadRequest()
         
 def main():
