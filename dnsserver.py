@@ -45,7 +45,7 @@ class Resolver(object):
                 uname.label[-2] == b'_acme-challenge' and \
                 (request.q.qtype == dnslib.QTYPE.TXT or \
                 request.q.qtype == dnslib.QTYPE.ANY):
-                txt = self.redis.get('acmetxtchal:{}'.format(subdomain))
+                txt = self.redis.get('acme-dns-01-chal:{}'.format(subdomain))
                 if txt:
                     reply.add_answer(dnslib.RR(
                         qname,
