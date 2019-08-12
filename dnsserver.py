@@ -23,13 +23,14 @@ class Resolver(object):
         qname = request.q.qname
 
         # Refuse queries thaat are not for our domain
-        if not qname.matchSuffix(self.domain):
+        if tuple(map(str.lower, map(qname._decode, qname.label[-2:]))) != \
+            tuple(map(str.lower, map(self.domain._decode, self.domain.label[-2:]))):
             reply.header.rcode = dnslib.RCODE.REFUSED
-            return reply 
+            return reply
 
         # Answer questions about the root domain name
         # TODO(supersat): We don't need to implement this, right?
-        if qname == self.domain:
+        if len(qname.label) <= 3:
             if request.q.qtype == dnslib.QTYPE.A:
                 reply.add_answer(dnslib.RR(
                     qname,
