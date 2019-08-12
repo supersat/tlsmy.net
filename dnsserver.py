@@ -84,11 +84,11 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, handle_sig)
 
     domain = dnslib.label(os.getenv('DOMAIN', 'tlsmy.net'))
-    server_ip = dnslib.A(os.getenv('SERVER_IP', '127.0.0.1'))
+    server_ip = os.getenv('SERVER_IP', '127.0.0.1')
     port = int(os.getenv('PORT', 53))
-    resolver = Resolver(domain, server_ip)
-    udp_server = dnslib.server.DNSServer(resolver, port=port)
-    tcp_server = dnslib.server.DNSServer(resolver, port=port, tcp=True)
+    resolver = Resolver(domain, dnslib.A(server_ip))
+    udp_server = dnslib.server.DNSServer(resolver, address=server_ip, port=port)
+    tcp_server = dnslib.server.DNSServer(resolver, address=server_ip, port=port, tcp=True)
 
     logging.info('starting DNS server on port %d', port)
     udp_server.start_thread()
