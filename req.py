@@ -19,7 +19,7 @@ def sign(payload, priv_key_json):
 def test(token):
     priv_key_file = open('private_key.json', 'rt')
     priv_key_json = priv_key_file.read()
-    req = urllib.request.Request('http://127.0.0.1:8080/challenge',
+    req = urllib.request.Request('https://tlsmy.net/challenge',
         data=sign(json.dumps({"type": "dns-01", "token": token}), priv_key_json).encode('utf-8'),
         headers={"Content-Type": "application/jose+json"})
     urllib.request.urlopen(req)
