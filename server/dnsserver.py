@@ -42,7 +42,7 @@ class Resolver(object):
         uname = qname.stripSuffix(self.domain)
         subdomain = uname._decode(uname.label[1]).lower()
         if BASE36_SHA256_HASH.match(subdomain):
-            if len(uname.label) == 4 and \
+            if len(uname.label) == 2 and \
                 uname._decode(uname.label[0]).lower() == '_acme-challenge' and \
                 (request.q.qtype == dnslib.QTYPE.TXT or \
                 request.q.qtype == dnslib.QTYPE.ANY):
