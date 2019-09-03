@@ -39,11 +39,10 @@ class Resolver(object):
                     rdata=self.server_ip))
             return reply
 
-        uname = self.domain
-        subdomain = uname._decode(uname.label[1]).lower()
+        subdomain = uname._decode(qname.label[1]).lower()
         if BASE36_SHA256_HASH.match(subdomain):
-            if len(uname.label) == 4 and \
-                uname._decode(uname.label[0]).lower() == '_acme-challenge' and \
+            if len(qname.label) == 4 and \
+                qname._decode(qname.label[0]).lower() == '_acme-challenge' and \
                 (request.q.qtype == dnslib.QTYPE.TXT or \
                 request.q.qtype == dnslib.QTYPE.ANY):
                 txt = self.redis.get('acme-dns-01-chal:{}'.format(subdomain))
@@ -56,11 +55,11 @@ class Resolver(object):
                     ));
                 else:
                     reply.header.rcode = dnslib.RCODE.NXDOMAIN
-            elif len(uname.label) == 5 and \
+            elif len(qname.label) == 7 and \
                 (request.q.qtype == dnslib.QTYPE.A or \
                 request.q.qtype == dnslib.QTYPE.ANY):
                 try:
-                    ip = tuple(map(int, uname.label[0:4]))
+                    ip = tuple(map(int, qname.label[0:4]))
                     reply.add_answer(dnslib.RR(
                         qname,
                         dnslib.QTYPE.A,
