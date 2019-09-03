@@ -39,7 +39,7 @@ class Resolver(object):
                     rdata=self.server_ip))
             return reply
 
-        subdomain = uname._decode(qname.label[1]).lower()
+        subdomain = qname._decode(qname.label[1]).lower()
         if BASE36_SHA256_HASH.match(subdomain):
             if len(qname.label) == 4 and \
                 qname._decode(qname.label[0]).lower() == '_acme-challenge' and \
