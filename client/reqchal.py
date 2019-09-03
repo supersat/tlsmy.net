@@ -17,11 +17,11 @@ def sign(payload, priv_key_json):
     }))
     return jws.serialize()
 
-def test(key, validation_string, url):
+def send_request(key, validation_string, url):
     priv_key_file = open(key, 'rt')
     priv_key_json = priv_key_file.read()
     req = urllib.request.Request(url,
-        data=sign(json.dumps({"type": "dns-01", "token": token}), priv_key_json).encode('utf-8'),
+        data=sign(json.dumps({"type": "dns-01", "token": validation_string}), priv_key_json).encode('utf-8'),
         headers={"Content-Type": "application/jose+json"})
     urllib.request.urlopen(req)
 
@@ -34,8 +34,10 @@ def environ_or_required(key):
 
 def main():
     arg_parser = argparse.ArgumentParser(description='TLSMy.net challenge requester')
-    arg_parser.add_argument('-k', '--key', help='certbot account private key', required=True)
-    arg_parser.add_argument('-V', '--validation-string', help='ACME DNS-01 validation string.' \
+    arg_parser.add_argument('-k', '--key', help='certbot account private key. ' \
+        'May also be passed in via the ACME_ACCT_KEY environment variable.', \
+            **environ_or_required('ACME_ACCT_KEY'))
+    arg_parser.add_argument('-V', '--validation-string', help='ACME DNS-01 validation string. ' \
         'May also be passed in via the CERTBOT_VALIDATION environment variable.', \
             **environ_or_required('CERTBOT_VALIDATION'))
     arg_parser.add_argument('-u', '--url', help='HTTP(S) API endpoint URL.', default='https://tlsmy.net/challenge')
