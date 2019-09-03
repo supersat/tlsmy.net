@@ -2,6 +2,7 @@
 
 from aiohttp import web
 import aioredis
+import argparse
 import asyncio
 import base36
 import base64
@@ -9,7 +10,7 @@ import json
 import jwcrypto.jwk
 import jwcrypto.jws
 
-class WebServer:
+class ChallengeReqWebServer:
     def __init__(self):
         self._app = web.Application(client_max_size=4096)
         self._app.add_routes([web.post('/challenge', self.post_challenge)])
@@ -17,9 +18,9 @@ class WebServer:
     async def _init_redis_pool(self):
         self._redis_pool = await aioredis.create_redis_pool('redis://localhost')
 
-    def run(self):
+    def run(self, **kwargs):
         asyncio.get_event_loop().run_until_complete(self._init_redis_pool())
-        web.run_app(self._app)
+        web.run_app(self._app, **kwargs)
 
     async def post_challenge(self, request):
         if request.content_type != 'application/jose+json':
@@ -44,9 +45,16 @@ class WebServer:
         #except:
         #    pass
         return web.HTTPBadRequest()
-        
+
 def main():
-    WebServer().run()
+    arg_parser = argparse.ArgumentParser(description='TLSMy.net challenge request web server')
+    arg_parser.add_argument('-H', '--host', help='Hostname to listen on.')
+    arg_parser.add_argument('-P', '--port', help='TCP port to listen on.')
+    arg_parser.add_argument('-U', '--path', help='Unix file system path to serve on.')
+    args = arg_parser.parse_args()
+
+    server = ChallengeReqWebServer()
+    server.run(**vars(args))
 
 if __name__ == '__main__':
     main()
