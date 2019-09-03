@@ -10,7 +10,7 @@ import redis
 import signal
 import time
 
-BASE36_SHA256_HASH = re.compile(r"[0-9a-z]{51}")
+BASE36_SHA256_HASH = re.compile(r"[0-9a-z]+")
 
 class Resolver(object):
     def __init__(self, domain, server_ip):
@@ -40,10 +40,10 @@ class Resolver(object):
             return reply
 
         uname = qname.stripSuffix(self.domain)
-        subdomain = uname._decode(uname.label[-1]).lower()
+        subdomain = uname._decode(uname.label[1]).lower()
         if BASE36_SHA256_HASH.match(subdomain):
-            if len(uname.label) == 2 and \
-                uname.label[-2] == b'_acme-challenge' and \
+            if len(uname.label) == 4 and \
+                uname._decode(uname.label[0]).lower() == '_acme-challenge' and \
                 (request.q.qtype == dnslib.QTYPE.TXT or \
                 request.q.qtype == dnslib.QTYPE.ANY):
                 txt = self.redis.get('acme-dns-01-chal:{}'.format(subdomain))
