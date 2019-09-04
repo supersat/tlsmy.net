@@ -55,25 +55,30 @@ requested per week to 50, so this can't scale beyond limited experimentation.
 
 ## How do I use it?
 
-These instructions assume you have the latest certbot client installed in a
-UNIX-like environment.
+These instructions assume you have pipenv installed in a UNIX-like environment.
 
-1) Create a ~/.letsencrypt directory to store your account credentials and
+1) Clone the repository, install dependencies, and activate the virtualenv:
+       git clone https://github.com/supersat/tlsmy.net.git
+       cd tlsmy.net
+       pipenv install
+       pipenv shell
+       
+2) Create a ~/.letsencrypt directory to store your account credentials and
    certificates:
 
-        mkdir ~/.letsencrypt
-        chmod 700 ~/.letsencrypt
+       mkdir ~/.letsencrypt
+       chmod 700 ~/.letsencrypt
    
-2) Create a Let's Encrypt account:
+3) Create a Let's Encrypt account:
 
        certbot --config-dir=$HOME/.letsencrypt --work-dir=$HOME/.letsencrypt \
          --logs-dir=$HOME/.letsencrypt register
    
-3) Set the ACME_ACCT_KEY environment variable:
+4) Set the ACME_ACCT_KEY environment variable:
 
        export ACME_ACCT_KEY=`find $HOME/.letsencrypt -name private_key.json`
    
-4) Request the certificate (from inside the tlsmy.net repo directory):
+5) Request the certificate (from inside the tlsmy.net repo directory):
 
        certbot --config-dir=$HOME/.letsencrypt --work-dir=$HOME/.letsencrypt \
          --logs-dir=$HOME/.letsencrypt certonly --manual \
