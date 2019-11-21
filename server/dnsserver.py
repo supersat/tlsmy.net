@@ -11,6 +11,8 @@ import signal
 import time
 
 BASE36_SHA256_HASH = re.compile(r"[0-9a-z]+")
+IPV4_REGEX = re.compile(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)-){3}" \
+                        "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
 
 class Resolver(object):
     def __init__(self, domain, server_ip):
@@ -40,9 +42,9 @@ class Resolver(object):
             return reply
 
         subdomain = qname._decode(qname.label[1]).lower()
-        if BASE36_SHA256_HASH.match(subdomain):
-            if len(qname.label) == 4 and \
-                qname._decode(qname.label[0]).lower() == '_acme-challenge' and \
+        hostname = qname._decode(qname.label[0]).lower()
+        if BASE36_SHA256_HASH.match(subdomain) and len(qname.label) == 4:
+            if hostname == '_acme-challenge' and \
                 (request.q.qtype == dnslib.QTYPE.TXT or \
                 request.q.qtype == dnslib.QTYPE.ANY):
                 txt = self.redis.get('acme-dns-01-chal:{}'.format(subdomain))
@@ -55,11 +57,11 @@ class Resolver(object):
                     ));
                 else:
                     reply.header.rcode = dnslib.RCODE.NXDOMAIN
-            elif len(qname.label) == 7 and \
+            elif IPV4_REGEX.match(hostname) and \
                 (request.q.qtype == dnslib.QTYPE.A or \
                 request.q.qtype == dnslib.QTYPE.ANY):
                 try:
-                    ip = tuple(map(int, qname.label[0:4]))
+                    ip = tuple(map(int, hostname.split('-')))
                     reply.add_answer(dnslib.RR(
                         qname,
                         dnslib.QTYPE.A,
