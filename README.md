@@ -13,7 +13,7 @@ even through manual processes.
 
 tlsmy.net solves these issues by using an approach pioneered by Plex. With
 tlsmy.net, a wildcard certificate is issued for *.accountid.tlsmy.net. A DNS
-server resolves A.B.C.D.accountid.tlsmy.net to A.B.C.D, so network devices can
+server resolves A-B-C-D.accountid.tlsmy.net to A.B.C.D, so network devices can
 still be accessed by IP address. By ensuring the expected accountid is in the
 hostname, users can have reasonable assurance that they are communicating with
 the expected device. In this case, the accountid is a base36 fingerprint of your
