@@ -13,7 +13,7 @@ def get_domain(key, domain, cname):
     if cname is None:
         return '*.{}.{}'.format(thumbprint, domain)
     else:
-        return '_acme_challenge.{} IN CNAME _acme-challenge.{}.{}'.format(cname, thumbprint, domain)
+        return '_acme-challenge.{} IN CNAME _acme-challenge.{}.{}'.format(cname, thumbprint, domain)
 
 # https://stackoverflow.com/a/45392259
 def environ_or_required(key):
