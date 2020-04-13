@@ -100,7 +100,7 @@ The process is the same for steps 1-4
 
     ***example output:***
 
-        _acme_challenge.test.home.example.com IN CNAME _acme-challenge.<publickey>.tlsmy.net
+        _acme-challenge.test.home.example.com IN CNAME _acme-challenge.<publickey>.tlsmy.net
 
 6) Request a certificate for the new subdomain:
 
