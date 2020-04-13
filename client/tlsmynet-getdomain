@@ -4,11 +4,15 @@ import argparse
 import base36
 import base64
 import jwcrypto.jwk
-import os
+import os,sys
+try:
+    from certbot import account, configuration, cli
+    from certbot.plugins import disco as plugins_disco
+    from certbot.display import ops as display_ops
+except ImportError:
+    pass
 
-def get_domain(key, domain, cname):
-    priv_key = jwcrypto.jwk.JWK.from_json(open(key, 'rt').read())
-    thumbprint_bytes = base64.urlsafe_b64decode(priv_key.thumbprint() + '==')
+def get_domain(thumbprint_bytes, domain, cname, config=None):
     thumbprint = base36.dumps(int.from_bytes(thumbprint_bytes, byteorder='big'))
     if cname is None:
         return '*.{}.{}'.format(thumbprint, domain)
@@ -16,23 +20,57 @@ def get_domain(key, domain, cname):
         return '_acme-challenge.{} IN CNAME _acme-challenge.{}.{}'.format(cname, thumbprint, domain)
 
 # https://stackoverflow.com/a/45392259
-def environ_or_required(key):
-    if os.environ.get(key):
-        return {'default': os.environ.get(key)}
+def load_key(key, config):
+    if key is None and os.environ.get('ACME_ACCT_KEY'):
+        key = open(os.environ.get('ACME_ACCT_KEY'), 'rt').read()
+
+    if key is not None:
+        jwk = jwcrypto.jwk.JWK.from_json(key)
+        return base64.urlsafe_b64decode(jwk.thumbprint() + '==')
+    elif config is not None:
+        account_storage = account.AccountFileStorage(config)
+    
+        if config.account is not None:
+            acc = account_storage.load(config.account)
+            return acc.key.thumbprint()
+        else:
+            accounts = account_storage.find_all()
+            if len(accounts) > 1:
+                acc = display_ops.choose_account(accounts)
+                return acc.key.thumbprint()
+            elif len(accounts) == 1:
+                acc = accounts[0]
+                return acc.key.thumbprint()
+
+        sys.stderr.write("No Account Registered. Run certbot register first.\n")
+        sys.exit(-1)
     else:
-        return {'required': True}
+        sys.stderr.write("Certbot configuration failed and no key specified.\n")
+        sys.exit(-1)
+        
 
 def main():
     arg_parser = argparse.ArgumentParser(description='TLSMy.net domain generator')
-    arg_parser.add_argument('-k', '--key', help='certbot account private key. ' \
-        'May also be passed in via the ACME_ACCT_KEY environment variable.', \
-        **environ_or_required('ACME_ACCT_KEY'))
     arg_parser.add_argument('-d', '--domain', help='Host domain. Defaults to tlsmy.net', \
         default='tlsmy.net')
+    arg_parser.add_argument('-k', '--key', help='certbot account private key. ' \
+        'May also be passed in via the ACME_ACCT_KEY environment variable.')
     arg_parser.add_argument('-c', '--cname', help='Print the required cname entry for authorizing a subdomain through TLSMynet',
         default=None)
+    arg_parser.add_argument('--staging', action='store_true', help='Use staging server account')
     args = arg_parser.parse_args()
-    print(get_domain(args.key, args.domain, args.cname))
+    config = None
+    try: 
+        cli_args = []
+        if args.staging:
+            cli_args.append('--test-cert')
+        plugins = plugins_disco.PluginsRegistry.find_all()
+        certbot_args = cli.prepare_and_parse_args(plugins, cli_args)
+        config = configuration.NamespaceConfig(certbot_args)
+    except Exception: #optionally do certbot autoconfig
+        pass
+    key = load_key(args.key, config)
+    print(get_domain(key, args.domain, args.cname))
 
 if __name__ == '__main__':
     main()
