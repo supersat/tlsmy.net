@@ -87,3 +87,23 @@ These instructions assume you have pipenv installed in a UNIX-like environment.
 
 If all goes well, your new certificate should be in
 ~/.letsencrypt/live/*.tlsmy.net
+
+## Custom Hostnames
+
+TLSMyNet can be used as a dynamic provider for DNS01 authorizations. This allows for setting up a custom hostname in the LAN such as test01.home.example.com. 
+
+The process is the same for steps 1-4
+
+5)  Get the required CNAME entry and add this to your public DNS zone: 
+
+        client/getdomain.py --cname test.home.example.com
+
+    ***example output:***
+
+        _acme-challenge.test.home.example.com IN CNAME _acme-challenge.<publickey>.tlsmy.net
+
+6) Request a certificate for the new subdomain:
+
+        certbot --config-dir=$HOME/.letsencrypt --work-dir=$HOME/.letsencrypt \
+         --logs-dir=$HOME/.letsencrypt certonly --manual \
+         --manual-auth client/reqchal.py -d test.home.example.com
